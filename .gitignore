@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.tools/
+src-tauri/target/
+src-tauri/gen/
+src-tauri/resources/ffmpeg.exe
+test-results/
+*.log
+release/
+soundcloud-sources*.zip

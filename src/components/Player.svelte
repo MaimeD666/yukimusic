@@ -1,0 +1,275 @@
+<script lang="ts">
+  import { fade } from "svelte/transition";
+  import { bassReaction } from "../lib/bassReaction";
+  import { neutralPalette, type PlayerPalette } from "../lib/palette";
+  import Artwork from "./Artwork.svelte";
+  import Icon from "./Icon.svelte";
+  import Visualizer from "./Visualizer.svelte";
+  import { time } from "../lib/format";
+  import type { Playback, Track } from "../lib/types";
+  export let state: Playback;
+  export let mode: "dock" | "immersive" | "mini" = "dock";
+  export let palette: PlayerPalette = neutralPalette;
+  export let motion = 180;
+  export let visualizer = true;
+  export let bass = false;
+  export let onbass: () => void;
+  export let liked = false;
+  export let panel: string | null = null;
+  export let onaction: (action: string, value?: unknown) => void;
+  export let onmode: (mode: "dock" | "immersive" | "mini") => void;
+  export let onpanel: (panel: string) => void;
+  export let onlike: (track: Track) => void;
+  export let onvisualizer: () => void;
+  $: track = state.queue.find((e) => e.key === state.currentKey)?.track;
+  $: duration = track?.duration || 0;
+  let seek: number | null = null;
+  let dragging = false;
+  let pendingSeek = false;
+  let seekKey: string | null = null;
+  let seekSnapshot: Playback | null = null;
+  $: if (seekKey !== state.currentKey) {
+    seekKey = state.currentKey;
+    seek = null;
+    pendingSeek = false;
+    dragging = false;
+  }
+  $: if (
+    pendingSeek &&
+    !dragging &&
+    state !== seekSnapshot &&
+    seek !== null &&
+    (Math.abs(state.position - seek) < 0.05 ||
+      (seek >= duration && state.position === 0) ||
+      state.error)
+  ) {
+    pendingSeek = false;
+    seek = null;
+  }
+  function commitSeek(event: Event) {
+    seek = +(event.target as HTMLInputElement).value;
+    seekSnapshot = state;
+    pendingSeek = true;
+    dragging = false;
+    onaction("seek", seek);
+  }
+</script>
+
+<section
+  class="player"
+  use:bassReaction={{
+    enabled: bass && mode === "immersive",
+    active: state.playing,
+    trackKey: state.currentKey,
+    reduced: motion === 0,
+  }}
+  class:bass-mode={bass && mode === "immersive"}
+  class:immersive={mode === "immersive"}
+  class:mini-player={mode === "mini"}
+  style:--accent={palette.accent}
+  style:--player-bg={palette.background}
+  style:--player-surface={palette.surface}
+  style:--player-raised={palette.raised}
+  style:--player-text={palette.foreground}
+  style:--player-muted={palette.muted}
+  style:--player-border={palette.border}
+  style:--player-on-accent={palette.onAccent}
+  style:--player-secondary={palette.secondary}
+  transition:fade={{ duration: motion }}
+  aria-label="Плеер"
+>
+  {#if mode === "immersive"}<div
+      class="bass-glow"
+      aria-hidden="true"
+    ></div>{/if}
+  {#if mode !== "dock"}
+    <div class="player-top" data-tauri-drag-region>
+      <span class="eyebrow">yukicloud</span>
+      <div>
+        {#if mode === "immersive"}<button
+            class="bass-toggle"
+            class:active={bass}
+            aria-label="Бас-режим"
+            aria-pressed={bass}
+            title="Визуальный отклик баса · B"
+            onclick={onbass}
+            ><Icon name="bass" size={18} /><span>Бас</span></button
+          >{/if}
+        <button
+          class="icon-button"
+          aria-label="Переключить визуалайзер"
+          class:active={visualizer}
+          onclick={onvisualizer}><Icon name="wave" size={18} /></button
+        ><button
+          class="icon-button"
+          aria-label="Вернуться к коллекции"
+          onclick={() => onmode("dock")}
+          ><Icon name="collapse" size={18} /></button
+        >
+      </div>
+    </div>
+  {/if}
+  <div class="player-art">
+    <Artwork
+      src={track?.artwork || null}
+      title={track?.title || ""}
+      large={mode === "immersive"}
+    />{#if mode === "immersive"}<span class="art-corner top-left"></span><span
+        class="art-corner bottom-right"
+      ></span>{/if}
+  </div>
+  <div class="player-track">
+    <h2 title={track?.title}>{track?.title || "Ничего не играет"}</h2>
+    <p>
+      {#if state.loading}<span class="loading-status" role="status"
+          >Загрузка…</span
+        >{/if}{track?.artist || "Выбери трек"}
+    </p>
+  </div>
+  <div class="player-center">
+    <div class="transport">
+      <button
+        class="icon-button secondary-transport"
+        class:active={state.shuffle}
+        title="Перемешать очередь"
+        aria-label="Перемешать очередь"
+        aria-pressed={state.shuffle}
+        onclick={() => onaction("shuffle")}
+        ><Icon name="shuffle" size={18} /></button
+      >
+      <button
+        class="icon-button"
+        title="Предыдущий трек"
+        aria-label="Предыдущий трек"
+        disabled={!track}
+        onclick={() => onaction("previous")}
+        ><Icon name="previous" size={20} /></button
+      >
+      <button
+        class="play-button"
+        class:loading={state.loading}
+        title={state.loading
+          ? "Загрузка трека · Нажми, чтобы приостановить"
+          : "Воспроизведение / пауза · Пробел"}
+        aria-label={state.playing || state.loading ? "Пауза" : "Воспроизвести"}
+        aria-busy={state.loading}
+        disabled={!track}
+        onclick={() => onaction("toggle")}
+        >{#if state.loading}<span class="play-spinner" aria-hidden="true"
+          ></span>{:else}<Icon
+            name={state.playing ? "pause" : "play"}
+            size={23}
+          />{/if}</button
+      >
+      <button
+        class="icon-button"
+        title="Следующий трек"
+        aria-label="Следующий трек"
+        disabled={!track}
+        onclick={() => onaction("next")}><Icon name="next" size={20} /></button
+      >
+      <button
+        class="icon-button secondary-transport repeat-button"
+        class:active={state.repeat !== "off"}
+        title={`Повтор: ${state.repeat === "off" ? "выключен" : state.repeat === "all" ? "очередь" : "трек"}`}
+        aria-label="Режим повтора"
+        onclick={() =>
+          onaction(
+            "repeat",
+            state.repeat === "off"
+              ? "all"
+              : state.repeat === "all"
+                ? "one"
+                : "off",
+          )}
+        ><Icon name="repeat" size={18} />{#if state.repeat === "one"}<small
+            >1</small
+          >{/if}</button
+      >
+    </div>
+    <div class="timeline">
+      <span>{time(seek ?? state.position)}</span><input
+        aria-label="Позиция воспроизведения"
+        type="range"
+        min="0"
+        max={Math.max(1, duration)}
+        step=".1"
+        value={seek ?? state.position}
+        disabled={!track}
+        style:--fill={`${Math.min(100, ((seek ?? state.position) / Math.max(1, duration)) * 100)}%`}
+        oninput={(e) => {
+          dragging = true;
+          seek = +e.currentTarget.value;
+        }}
+        onchange={commitSeek}
+      /><span>{time(duration)}</span>
+    </div>
+  </div>
+  <div class="player-spectrum">
+    <Visualizer
+      active={state.playing}
+      enabled={visualizer}
+      large={mode === "immersive"}
+      color={palette.secondary}
+      trackKey={state.currentKey}
+    />
+  </div>
+  <div class="player-options">
+    {#if mode === "immersive"}<button
+        class="immersive-like icon-button"
+        class:active={liked}
+        aria-label="В коллекцию"
+        disabled={!track}
+        onclick={() => track && onlike(track)}
+        ><Icon name="heart" size={22} /></button
+      >{/if}
+
+    <div class="volume-control">
+      <button
+        class="icon-button"
+        aria-label={state.muted ? "Включить звук" : "Выключить звук"}
+        onclick={() => onaction("mute")}
+        ><Icon
+          name={state.muted || state.volume === 0 ? "mute" : "volume"}
+          size={18}
+        /></button
+      ><input
+        type="range"
+        aria-label="Громкость приложения"
+        title={`Громкость ${Math.round(state.volume * 100)}%`}
+        min="0"
+        max="1"
+        step=".01"
+        value={state.muted ? 0 : state.volume}
+        style:--fill={`${state.muted ? 0 : state.volume * 100}%`}
+        oninput={(e) => onaction("volume", +e.currentTarget.value)}
+      />
+    </div>
+    <button
+      class="icon-button"
+      class:active={panel === "eq"}
+      title="Эквалайзер"
+      aria-label="Эквалайзер"
+      onclick={() => onpanel("eq")}><Icon name="eq" size={19} /></button
+    >
+    <button
+      class="icon-button"
+      class:active={panel === "queue"}
+      title="Очередь · Q"
+      aria-label="Открыть очередь"
+      onclick={() => onpanel("queue")}><Icon name="queue" size={20} /></button
+    >
+    {#if mode === "dock"}<button
+        class="icon-button player-mode"
+        title="Мини-плеер · M"
+        aria-label="Мини-плеер"
+        onclick={() => onmode("mini")}><Icon name="mini" size={19} /></button
+      ><button
+        class="icon-button player-mode"
+        title="Полноэкранный плеер · F"
+        aria-label="Полноэкранный плеер"
+        onclick={() => onmode("immersive")}
+        ><Icon name="expand" size={19} /></button
+      >{/if}
+  </div>
+</section>

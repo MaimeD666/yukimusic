@@ -1,0 +1,61 @@
+name: Windows build and release
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Build minimal FFmpeg from source
+        run: python scripts/prepare-ffmpeg.py
+      - name: Check types, audio DSP, palette and queue
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
+      - name: Build Windows installer
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
+      - name: Package portable build and checksums
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yukicloud-windows-x64
+          path: |
+            release/*-setup.exe
+            release/*-portable.zip
+            release/ffmpeg-8.0.1.tar.xz
+            release/SHA256SUMS.txt
+          retention-days: 14
+      - name: Publish v0.1
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v0.1 >/dev/null 2>&1; then
+            echo 'v0.1 already exists; this build is available as a workflow artifact.'
+          else
+            gh release create v0.1 --target "$GITHUB_SHA" --title 'yukicloud 0.1 — бас приехал' --notes-file docs/release-v0.1.md \
+              release/yukicloud_0.1.0_x64-setup.exe release/yukicloud_0.1.0_x64-portable.zip \
+              release/ffmpeg-8.0.1.tar.xz release/SHA256SUMS.txt
+          fi

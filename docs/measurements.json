@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-10",
+  "build": "0.1.0 release",
+  "machine": {
+    "os": "Windows 10 IoT Enterprise 19045",
+    "cpu": "Intel Core i7-14700K",
+    "logical_processors": 28,
+    "memory_gib": 32,
+    "refresh_hz": 165
+  },
+  "memory_and_cpu": {
+    "visible_playing": {
+      "cpu_percent_all_cores": 1.306,
+      "working_set_mib": 464.1,
+      "private_commit_mib": 277.5,
+      "processes": [
+        "yukicloud.exe",
+        "msedgewebview2.exe",
+        "ffmpeg.exe",
+        "conhost.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe"
+      ],
+      "sample_seconds": 10.0
+    },
+    "fullscreen_bass": {
+      "cpu_percent_all_cores": 1.066,
+      "working_set_mib": 466.6,
+      "private_commit_mib": 300.4,
+      "processes": [
+        "yukicloud.exe",
+        "msedgewebview2.exe",
+        "ffmpeg.exe",
+        "conhost.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe",
+        "msedgewebview2.exe"
+      ],
+      "sample_seconds": 10.0
+    },
+    "tray_playing": {
+      "cpu_percent_all_cores": 0.033,
+      "working_set_mib": 70.0,
+      "private_commit_mib": 45.2,
+      "processes": [
+        "yukicloud.exe",
+        "ffmpeg.exe",
+        "conhost.exe"
+      ],
+      "sample_seconds": 10.0
+    },
+    "webview_unloaded": true,
+    "restored": {
+      "playing": true,
+      "queue_length": 14,
+      "position": 102.94933333333333,
+      "before_hide_position": 56.458666666666666
+    },
+    "tray_paused": {
+      "cpu_percent_all_cores": 0.011,
+      "working_set_mib": 70.1,
+      "private_commit_mib": 45.2,
+      "processes": [
+        "yukicloud.exe",
+        "ffmpeg.exe",
+        "conhost.exe"
+      ],
+      "sample_seconds": 10.0
+    }
+  },
+  "latency": {
+    "cold_start_ms": 858,
+    "seek_ms": [
+      49,
+      49,
+      48,
+      34
+    ],
+    "prepared_next_ms": 206,
+    "unavailable_duplicates_skipped": true,
+    "autoload": {
+      "initial": 30,
+      "after_scroll": 60,
+      "rendered_rows": 18
+    }
+  },
+  "native_features": {
+    "audio_rebind_ms": 94,
+    "audio_rebind_preserves_pause_queue_settings": true,
+    "taskbar_transport": true,
+    "bass": {
+      "frames": 412,
+      "max_scale": 1.0413,
+      "frame_ms_median": 6.1
+    },
+    "bass_pause_settles": true
+  }
+}

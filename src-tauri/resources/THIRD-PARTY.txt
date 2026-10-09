@@ -1,0 +1,21 @@
+yukicloud bundles FFmpeg 8.0.1 as a separate, replaceable executable.
+Copyright (c) 2000-2025 the FFmpeg developers.
+License: GNU LGPL version 2.1 or later (see FFmpeg-LGPLv2.1.txt).
+No GPL/nonfree codecs or external multimedia libraries are enabled.
+
+Unmodified source: https://ffmpeg.org/releases/ffmpeg-8.0.1.tar.xz
+SHA256: 05ee0b03119b45c0bdb4df654b96802e909e0a752f72e4fe3794f487229e5a41
+The same source archive is available alongside the installer at:
+https://github.com/MaimeD666/yukimusic/releases/tag/v0.1
+Build configuration: scripts/ffmpeg-configure.sh in the yukimusic repository.
+Build/download instructions with tool versions: scripts/prepare-ffmpeg.py.
+FFmpeg is built with w64devkit 2.4.0 and NASM 2.16.03; TLS uses Windows Schannel.
+You may replace resources/ffmpeg.exe with a compatible FFmpeg executable.
+
+UI fonts: Manrope and UnifrakturCook, SIL Open Font License 1.1.
+Font licenses are included in public/fonts in the source repository.
+https://github.com/google/fonts/tree/main/ofl/manrope
+https://github.com/google/fonts/tree/main/ofl/unifrakturcook
+
+Application dependencies and their versions are recorded in Cargo.lock and package-lock.json.
+Tauri, Svelte, rodio, rustfft and the other libraries retain their respective licenses.
