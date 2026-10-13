@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tarfile
+import urllib.error
 import urllib.request
 import zipfile
 
@@ -20,11 +21,35 @@ ASSETS = [
     ('w64devkit-x64-2.4.0.7z.exe', 'https://github.com/skeeto/w64devkit/releases/download/v2.4.0/w64devkit-x64-2.4.0.7z.exe', '80678c29a56982d7d3b342f12a0060157df5654c38d82d4adc40704070d6aafb'),
     ('nasm-2.16.03-win64.zip', 'https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/win64/nasm-2.16.03-win64.zip', '3ee4782247bcb874378d02f7eab4e294a84d3d15f3f6ee2de2f47a46aa7226e6'),
 ]
+
+def download_asset(path, urls, expected):
+    """Only promote a complete, hash-verified archive into the download cache."""
+    partial = path.with_suffix(path.suffix + '.part')
+    errors = []
+    for url in urls:
+        try:
+            print(f'Downloading {path.name} from {url}', flush=True)
+            with urllib.request.urlopen(url, timeout=45) as response, partial.open('wb') as output:
+                shutil.copyfileobj(response, output)
+            if hashlib.sha256(partial.read_bytes()).hexdigest() != expected:
+                raise ValueError(f'SHA256 mismatch: {path.name}')
+            partial.replace(path)
+            return
+        except (OSError, urllib.error.URLError, ValueError) as error:
+            errors.append(f'{url}: {error}')
+            print(f'Download failed: {error}', flush=True)
+        finally:
+            partial.unlink(missing_ok=True)
+    raise RuntimeError('No verified download available:\n' + '\n'.join(errors))
+
 for name, url, expected in ASSETS:
     path = DOWNLOADS / name
     if not path.exists():
-        print(f'Downloading {name}', flush=True)
-        urllib.request.urlretrieve(url, path)
+        urls = [url]
+        if name == 'ffmpeg-8.0.1.tar.xz':
+            # The previous release redistributes the identical, unmodified source.
+            urls.append('https://github.com/MaimeD666/yukimusic/releases/download/v0.1/ffmpeg-8.0.1.tar.xz')
+        download_asset(path, urls, expected)
     if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
         raise RuntimeError(f'SHA256 mismatch: {name}. Remove this download and retry.')
 
