@@ -46,16 +46,16 @@ jobs:
             release/ffmpeg-8.0.1.tar.xz
             release/SHA256SUMS.txt
           retention-days: 14
-      - name: Publish v0.1
+      - name: Publish v0.2
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view v0.1 >/dev/null 2>&1; then
-            echo 'v0.1 already exists; this build is available as a workflow artifact.'
+          if gh release view v0.2 >/dev/null 2>&1; then
+            echo 'v0.2 already exists; this build is available as a workflow artifact.'
           else
-            gh release create v0.1 --target "$GITHUB_SHA" --title 'yukicloud 0.1 — бас приехал' --notes-file docs/release-v0.1.md \
-              release/yukicloud_0.1.0_x64-setup.exe release/yukicloud_0.1.0_x64-portable.zip \
+            gh release create v0.2 --target "$GITHUB_SHA" --title 'yukicloud 0.2 — облачный интерфейс' --notes-file docs/release-v0.2.md \
+              release/yukicloud_0.2.0_x64-setup.exe release/yukicloud_0.2.0_x64-portable.zip \
               release/ffmpeg-8.0.1.tar.xz release/SHA256SUMS.txt
           fi

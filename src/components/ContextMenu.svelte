@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade } from "svelte/transition";
+  import { softReveal } from "../lib/motion";
   import Icon from "./Icon.svelte";
   import type { Menu } from "../lib/menu";
   export let menu: Menu;
@@ -69,7 +69,7 @@
   style:left={`${left}px`}
   style:top={`${top}px`}
   onkeydown={keydown}
-  transition:fade={{ duration: 80 }}
+  transition:softReveal={{ duration: 150, y: 4, scale: 0.97 }}
 >
   {#each menu.items as item}
     {#if item.separator}<div role="separator" class="menu-separator"></div>{/if}
@@ -77,7 +77,7 @@
       role="menuitem"
       disabled={item.disabled}
       onclick={() => {
-        close();
+        close(true);
         try {
           Promise.resolve(item.run()).catch(onerror);
         } catch (e) {
@@ -99,9 +99,10 @@
     max-height: calc(100vh - 16px);
     overflow-y: auto;
     padding: 5px;
-    border: 1px solid #48434d;
-    background: #18161d;
-    color: #eee9f1;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--raised);
+    color: var(--text);
     box-shadow: 0 8px 28px #0005;
   }
   button {
@@ -114,12 +115,13 @@
     color: inherit;
     text-align: left;
     font-size: 12px;
+    border-radius: 9px;
     line-height: 19px;
   }
   button:hover:not(:disabled),
   button:focus-visible {
-    background: #302b36;
-    color: white;
+    background: var(--hover);
+    color: var(--text);
     outline: none;
   }
   button:disabled {
@@ -128,6 +130,6 @@
   .menu-separator {
     height: 1px;
     margin: 5px 7px;
-    background: #35303c;
+    background: var(--line);
   }
 </style>

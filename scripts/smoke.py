@@ -28,7 +28,7 @@ with sync_playwright() as p:
         raise AssertionError(f'Playback timed out: {state.get("error")}, {state.get("position")}')
 
     page.locator('.search input').fill('meat computer')
-    page.wait_for_function('document.querySelectorAll(".artist-item").length > 0')
+    page.wait_for_function('document.querySelectorAll(".track-row").length > 0')
     found=invoke('search', query='meat computer')
     assert all(found[k] for k in ['artists','playlists','tracks']), found['errors']
     report['search']={k:len(found[k]) for k in ['artists','playlists','tracks']}

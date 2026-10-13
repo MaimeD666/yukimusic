@@ -1,7 +1,24 @@
 <script lang="ts">
+  import { reveal } from "../lib/motion";
   export let name = "";
   export let size = 20;
   const paths: Record<string, string> = {
+    cloud: "M7 18a5 5 0 1 1 .5-10A6 6 0 0 1 19 9a4.5 4.5 0 0 1-.5 9H7Z",
+    library:
+      "M4 5v14M9 5v14m5-14 5 14M3 5h2M8 5h2m3 0 2-.5M3 19h2M8 19h2m9 0 2-.5",
+    artist:
+      "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2",
+    settings:
+      "M9.5 3h5l.5 2.4 1.5.9 2.4-.8 2.5 4.3-1.8 1.6v1.2l1.8 1.6-2.5 4.3-2.4-.8-1.5.9-.5 2.4h-5L9 18.6l-1.5-.9-2.4.8-2.5-4.3 1.8-1.6v-1.2L2.6 9.8l2.5-4.3 2.4.8L9 5.4 9.5 3ZM15.25 12a3.25 3.25 0 1 1-6.5 0 3.25 3.25 0 0 1 6.5 0Z",
+    sun: "M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5",
+    moon: "M20.5 13A9 9 0 0 1 11 3.5 9 9 0 1 0 20.5 13Z",
+    check: "m5 12 4 4L19 6",
+    more: "M6 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z",
+    music:
+      "M9 17V5l11-2v12M9 9l11-2M9 17a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm11-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z",
+    filter: "M4 7h16M7 12h10m-7 5h4",
+    clock: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM12 7v5l3 2",
+    up: "m5 15 7-7 7 7",
     play: "M8 5l11 7-11 7V5Z",
     pause: "M8 5v14M16 5v14",
     next: "M5 5l10 7-10 7V5ZM19 5v14",
@@ -37,6 +54,8 @@
 </script>
 
 <svg
+  data-icon={name}
+  use:reveal={{ key: name, initial: false, duration: 180, y: 0, scale: 0.82 }}
   width={size}
   height={size}
   viewBox="0 0 24 24"

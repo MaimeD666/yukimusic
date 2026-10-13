@@ -1,12 +1,12 @@
 <script lang="ts"></script>
 
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="5.48 -425.52 986.04 1535.04"
-  aria-hidden="true"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"
   ><path
-    fill="currentColor"
-    transform="translate(0 684) scale(1 -1)"
-    d="M464 34 352 85 111 159Q171 234 171 340L179 794Q179 844 105 890L256 1080L496 921Q485 880 465.5 862.5Q446 845 442 804L397 335Q394 304 437.5 239.0Q481 174 547 171Q651 410 657 794Q659 841 585 890L736 1080L962 921Q951 880 939.0 867.5Q927 855 902.0 743.5Q877 632 794.5 436.0Q712 240 613.5 69.5Q515 -101 412.5 -227.5Q310 -354 229 -396L35 -238Q327 -131 464 34Z"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M18 46a12 12 0 1 1 1-24 15 15 0 0 1 29 3 10.5 10.5 0 0 1-1 21H18Z"
   /></svg
 >

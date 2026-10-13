@@ -21,8 +21,7 @@
 <section class="eq-panel" aria-label="Эквалайзер">
   <div class="panel-heading">
     <div>
-      <span class="eyebrow">НАСТРОЙКА ЗВУКА</span>
-      <h2>Эквалайзер<span class="heading-star">✦</span></h2>
+      <h2>Эквалайзер</h2>
     </div>
     <button
       class="icon-button"

@@ -1,0 +1,506 @@
+/* Every player mode uses the cover's palette; the dock also follows the theme. */
+input[type="range"] {
+  appearance: none;
+  height: 4px;
+  border-radius: 10px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--fill, 0%),
+    var(--line) var(--fill, 0%)
+  );
+  cursor: pointer;
+  margin: 0;
+  accent-color: var(--accent);
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 0;
+  border-radius: 50%;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 0;
+  border-radius: 50%;
+}
+input[type="range"]:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.player {
+  --text: var(--player-text);
+  --muted: var(--player-muted);
+  --faint: var(--player-muted);
+  --surface: var(--player-surface);
+  --surface-soft: var(--player-raised);
+  --raised: var(--player-raised);
+  --hover: var(--player-raised);
+  --on-accent: var(--player-on-accent);
+  --line: color-mix(in srgb, var(--player-border) 55%, transparent);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--player-text);
+  position: relative;
+  flex: none;
+  display: grid;
+  grid-template-columns: 56px minmax(120px, 1fr) minmax(230px, 1.25fr) minmax(
+      230px,
+      1fr
+    );
+  gap: 16px;
+  align-items: center;
+  min-height: 96px;
+  height: 96px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 13px 18px;
+  background: linear-gradient(120deg, var(--player-surface), var(--player-bg));
+  box-shadow: var(--shadow);
+}
+.player-art {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 15px;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+.player-track {
+  min-width: 0;
+}
+.dock-spectrum {
+  width: min(100%, 200px);
+  height: 16px;
+  margin-top: 3px;
+  pointer-events: none;
+}
+.dock-spectrum,
+.player-spectrum {
+  transition: opacity 220ms var(--ease-soft);
+}
+.spectrum-hidden {
+  opacity: 0;
+}
+.player-track-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.player-track h2 {
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.player-like {
+  width: 27px;
+  height: 27px;
+  flex: none;
+}
+.player-track p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.player-artist {
+  font: inherit;
+  padding: 0;
+  color: inherit;
+}
+.player-artist:hover {
+  color: var(--accent);
+}
+.player-center {
+  min-width: 0;
+  max-width: 500px;
+  width: 100%;
+  justify-self: center;
+}
+.transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.transport .icon-button {
+  width: 28px;
+  height: 29px;
+}
+.play-button {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--player-on-accent);
+  flex: none;
+  padding: 0;
+  box-shadow: 0 3px 15px #00000014;
+}
+.player:not(.immersive):not(.mini-player) .play-button {
+  color: var(--on-accent);
+}
+.play-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.play-button:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+}
+.timeline > span {
+  color: var(--faint);
+  min-width: 28px;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.timeline > span:last-child {
+  text-align: right;
+}
+.timeline > input {
+  flex: 1;
+  width: 100%;
+}
+.player-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1px;
+}
+.player-options > .icon-button {
+  width: 30px;
+}
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 9px;
+}
+.volume-control .icon-button {
+  width: 30px;
+}
+.volume-control input {
+  width: 65px;
+}
+.repeat-button {
+  position: relative;
+}
+.repeat-button small {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 8px;
+  padding: 1px;
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--accent);
+}
+.idle .player-track h2 {
+  color: var(--muted);
+  font-size: 11px;
+}
+.idle .player-like {
+  display: none;
+}
+.player-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.player-top > .eyebrow {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.7px;
+  color: var(--player-text);
+}
+.player-top > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.visualizer {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.player.immersive,
+.player.mini-player {
+  color: var(--player-text);
+  border-color: var(--player-border);
+  background: radial-gradient(
+    ellipse at 50% 35%,
+    var(--player-surface),
+    var(--player-bg) 85%
+  );
+}
+.player.immersive {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  padding: 26px 40px;
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 520px) 1fr;
+  grid-template-rows: 34px minmax(120px, 1fr) auto 86px 64px 36px;
+  gap: 16px;
+}
+.immersive > *:not(.bass-glow) {
+  z-index: 1;
+}
+.immersive .player-top {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.immersive .player-art {
+  grid-column: 2;
+  grid-row: 2;
+  width: min(40vh, 390px);
+  height: min(40vh, 390px);
+  max-height: 100%;
+  max-width: 100%;
+  align-self: center;
+  justify-self: center;
+  border-radius: 26px;
+  box-shadow: 0 20px 70px #00000026;
+}
+.immersive .player-track {
+  grid-column: 2;
+  grid-row: 3;
+  text-align: center;
+}
+.immersive .player-track-heading {
+  justify-content: center;
+  gap: 15px;
+}
+.immersive .player-track h2 {
+  font-size: clamp(22px, 2.5vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.8px;
+}
+.immersive .player-track p {
+  font-size: 13px;
+  margin-top: 8px;
+}
+.immersive .player-center {
+  grid-column: 2;
+  grid-row: 4;
+}
+.immersive .transport {
+  gap: 27px;
+}
+.immersive .play-button {
+  width: 48px;
+  height: 48px;
+}
+.immersive .timeline {
+  margin-top: 15px;
+}
+.immersive .player-spectrum {
+  grid-column: 2;
+  grid-row: 5;
+  height: 60px;
+  width: 100%;
+}
+.immersive .player-options {
+  grid-column: 2;
+  grid-row: 6;
+  justify-content: center;
+  gap: 10px;
+}
+.immersive .player-options .volume-control {
+  margin-right: 10px;
+}
+.immersive .volume-control input {
+  width: 95px;
+}
+.immersive .bass-glow {
+  position: absolute;
+  pointer-events: none;
+  left: 50%;
+  top: 38%;
+  width: min(90vw, 1000px);
+  height: min(100vh, 1000px);
+  z-index: 0;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse,
+    var(--player-secondary),
+    transparent 67%
+  );
+}
+.bass-mode .bass-glow {
+  will-change: transform, opacity;
+}
+.bass-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 11px;
+  color: var(--player-muted);
+  font-size: 12px;
+}
+.bass-toggle.active {
+  color: var(--accent);
+  background: var(--player-raised);
+}
+.immersive .player-track p,
+.immersive .timeline > span,
+.mini-player .player-track p,
+.mini-player .timeline > span {
+  color: var(--player-muted);
+}
+.immersive .icon-button,
+.mini-player .icon-button {
+  color: var(--player-muted);
+}
+.immersive .icon-button:hover,
+.mini-player .icon-button:hover {
+  background: var(--player-raised);
+  color: var(--player-text);
+}
+.immersive .icon-button.active,
+.mini-player .icon-button.active {
+  color: var(--accent);
+}
+.immersive .play-button,
+.mini-player .play-button {
+  color: var(--player-on-accent);
+}
+.immersive input[type="range"],
+.mini-player input[type="range"] {
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--fill, 0%),
+    var(--player-border) var(--fill, 0%)
+  );
+}
+.immersive .repeat-button small,
+.mini-player .repeat-button small {
+  background: var(--player-bg);
+}
+.mini.application {
+  padding: 0;
+}
+.player.mini-player {
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  border-radius: 0;
+  padding: 14px 20px;
+  grid-template-columns: 62px minmax(0, 1fr);
+  grid-template-rows: 26px 65px 69px 32px;
+  gap: 8px 14px;
+}
+.mini-player .player-top {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.mini-player .player-top > .eyebrow {
+  font-size: 17px;
+}
+.mini-player .player-top > div > button:first-child {
+  display: none;
+}
+.mini-player .player-art {
+  grid-column: 1;
+  grid-row: 2;
+  height: 60px;
+  width: 60px;
+  border-radius: 15px;
+}
+.mini-player .player-track {
+  grid-column: 2;
+  grid-row: 2;
+}
+.mini-player .player-track h2 {
+  font-size: 13px;
+}
+.mini-player .player-center {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+.mini-player .transport {
+  gap: 27px;
+}
+.mini-player .timeline {
+  margin-top: 9px;
+}
+.mini-player .player-options {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  justify-content: center;
+  gap: 10px;
+}
+.mini-player .volume-control input {
+  width: 100px;
+}
+.player .loading-status {
+  color: inherit;
+  margin-right: 7px;
+}
+@media (max-width: 1150px) {
+  .player:not(.immersive):not(.mini-player) {
+    grid-template-columns: 50px minmax(110px, 1fr) minmax(210px, 1.1fr) auto;
+    gap: 12px;
+    padding-inline: 14px;
+  }
+  .player:not(.immersive):not(.mini-player) .player-art {
+    width: 50px;
+    height: 50px;
+    border-radius: 13px;
+  }
+  .player:not(.immersive):not(.mini-player) .volume-control input {
+    width: 48px;
+  }
+  .player:not(.immersive):not(.mini-player) .player-options > .icon-button {
+    width: 28px;
+  }
+  .player:not(.immersive):not(.mini-player) .volume-control {
+    margin-right: 4px;
+  }
+}
+@media (max-width: 850px) {
+  .player:not(.immersive):not(.mini-player) {
+    grid-template-columns: 44px minmax(100px, 1fr) minmax(200px, 1.1fr) auto;
+    gap: 10px;
+    height: 90px;
+    min-height: 90px;
+  }
+  .player:not(.immersive):not(.mini-player) .player-art {
+    width: 44px;
+    height: 44px;
+  }
+  .player:not(.immersive):not(.mini-player) .transport {
+    gap: 12px;
+  }
+  .player:not(.immersive):not(.mini-player) .volume-control input {
+    width: 42px;
+  }
+  .player:not(.immersive):not(.mini-player) .player-like {
+    width: 24px;
+  }
+  .player:not(.immersive):not(.mini-player) .player-track h2 {
+    font-size: 11px;
+  }
+}

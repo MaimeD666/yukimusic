@@ -4,6 +4,7 @@
   import { time } from "../lib/format";
   import type { Track } from "../lib/types";
   import { paginate } from "../lib/paginate";
+  import { reveal } from "../lib/motion";
   export let tracks: Track[] = [];
   export let currentId: number | undefined = undefined;
   export let playing = false;
@@ -15,6 +16,9 @@
   export let hasMore = false;
   export let loadingMore = false;
   export let onmore: () => Promise<void> = async () => {};
+  export let resetKey = "";
+  let scrollElement: HTMLDivElement;
+  $: if (resetKey !== undefined && scrollElement) scrollElement.scrollTop = 0;
   let scrollTop = 0;
   let height = 400;
   const rowHeight = 56;
@@ -31,15 +35,23 @@
 
 <div
   class="track-table"
+  use:reveal={{ key: resetKey, y: 3, duration: 200 }}
   role="table"
   aria-label="Треки"
-  aria-rowcount={tracks.length}
+  aria-rowcount={tracks.length + 1}
 >
   <div class="track-heading" role="row">
-    <span>№</span><span>ТРЕК / АРТИСТ</span><span>ВРЕМЯ</span><span></span>
+    <span role="columnheader">#</span><span role="columnheader">Название</span
+    ><span role="columnheader" class="track-artist-column">Артист</span><span
+      role="columnheader"
+      class="duration-heading"
+      ><Icon name="clock" size={14} /><span class="sr-only">Длительность</span
+      ></span
+    ><span role="columnheader" class="actions-heading">Действия</span>
   </div>
   <div
     class="track-scroll"
+    bind:this={scrollElement}
     bind:clientHeight={height}
     onscroll={(e) => (scrollTop = e.currentTarget.scrollTop)}
   >
@@ -51,7 +63,8 @@
         class:current={currentId === track.id}
         role="row"
         tabindex="-1"
-        aria-rowindex={start + i + 1}
+        aria-rowindex={start + i + 2}
+        class:unavailable={!track.available}
         draggable="true"
         ondragstart={(e) =>
           e.dataTransfer?.setData(
@@ -61,7 +74,7 @@
       >
         <button
           class="track-number"
-          title={`Включить ${track.title}`}
+          data-tooltip={`Включить ${track.title}`}
           aria-label={`Включить ${track.title}`}
           onclick={() => onplay(track, start + i)}
           disabled={!track.available}
@@ -86,35 +99,46 @@
             <button
               class="track-title"
               onclick={() => onplay(track, start + i)}
-              disabled={!track.available}>{track.title}</button
-            ><button class="artist-link" onclick={() => onartist(track)}
-              >{track.artist}</button
+              disabled={!track.available}
+              data-tooltip={track.title}>{track.title}</button
+            ><button
+              class="artist-link"
+              data-tooltip={track.artist}
+              onclick={() => onartist(track)}>{track.artist}</button
             >
           </div>
         </div>
+        <button
+          class="artist-link track-artist-column"
+          data-tooltip={track.artist}
+          onclick={() => onartist(track)}>{track.artist}</button
+        >
         <span class="track-duration">{time(track.duration)}</span>
         <div class="track-actions">
           <button
             class="icon-button"
             class:active={liked.has(track.id)}
+            aria-pressed={liked.has(track.id)}
             aria-label={liked.has(track.id)
               ? "Убрать из коллекции"
               : "В коллекцию"}
-            title="В коллекцию"
+            data-tooltip="В коллекцию"
             onclick={() => onlike(track)}
             ><Icon name="heart" size={16} /></button
           >
           <button
             class="icon-button"
             aria-label="Играть следующим"
-            title="Играть следующим"
+            disabled={!track.available}
+            data-tooltip="Играть следующим"
             onclick={() => onqueue(track, true)}
             ><Icon name="next" size={16} /></button
           >
           <button
             class="icon-button"
             aria-label="В конец очереди"
-            title="В конец очереди"
+            disabled={!track.available}
+            data-tooltip="В конец очереди"
             onclick={() => onqueue(track, false)}
             ><Icon name="plus" size={17} /></button
           >

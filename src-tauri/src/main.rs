@@ -6,6 +6,7 @@ mod media;
 mod models;
 mod persistence;
 mod soundcloud;
+mod spectrum;
 mod stream_cache;
 #[cfg(windows)]
 mod taskbar;

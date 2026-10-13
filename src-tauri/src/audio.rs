@@ -5,7 +5,7 @@ use crate::{
     stream_cache::Stream,
 };
 use rodio::{OutputStream, Sink, Source};
-use rustfft::{num_complex::Complex, FftPlanner};
+use crate::spectrum::{Spectrum, CHANNELS, FRAMES, HOP};
 use serde_json::Value;
 use std::{
     collections::VecDeque,
@@ -152,11 +152,11 @@ impl Iterator for PcmSource {
             sample = filter.sample(sample);
         }
         sample = sample.clamp(-1., 1.);
-        if self.channel == 0 && self.visualization.load(Ordering::Relaxed) {
+        if self.visualization.load(Ordering::Relaxed) {
             self.spectrum_buffer.push(sample);
-            if self.spectrum_buffer.len() == 2048 {
+            if self.spectrum_buffer.len() == FRAMES * CHANNELS {
                 let _ = self.spectrum.try_send(self.spectrum_buffer.clone());
-                self.spectrum_buffer.drain(..800);
+                self.spectrum_buffer.drain(..HOP * CHANNELS);
             }
         } else if !self.visualization.load(Ordering::Relaxed) {
             self.spectrum_buffer.clear();
@@ -232,9 +232,7 @@ impl Player {
         std::thread::Builder::new()
             .name("spectrum".into())
             .spawn(move || {
-                let mut planner = FftPlanner::<f32>::new();
-                let fft = planner.plan_fft_forward(2048);
-                let mut buffer = vec![Complex::new(0., 0.); 2048];
+                let mut analyzer = Spectrum::new();
                 while let Ok(mut samples) = spectrum_rx.recv() {
                     while let Ok(latest) = spectrum_rx.try_recv() {
                         samples = latest;
@@ -242,26 +240,8 @@ impl Player {
                     if !spectrum_visible.load(Ordering::Relaxed) {
                         continue;
                     }
-                    for (i, x) in samples.iter().enumerate() {
-                        let window =
-                            0.5 - 0.5 * (2. * std::f32::consts::PI * i as f32 / 2047.).cos();
-                        buffer[i] = Complex::new(x * window, 0.);
-                    }
-                    fft.process(&mut buffer);
-                    let mut bands = vec![0f32; 48];
-                    for (i, value) in bands.iter_mut().enumerate() {
-                        let lower = 35. * (16000f32 / 35.).powf(i as f32 / 48.);
-                        let upper = 35. * (16000f32 / 35.).powf((i + 1) as f32 / 48.);
-                        let a = ((lower / RATE as f32 * 2048.) as usize).max(1);
-                        let b = ((upper / RATE as f32 * 2048.) as usize)
-                            .max(a + 1)
-                            .min(1024);
-                        let power =
-                            buffer[a..b].iter().map(|v| v.norm_sqr()).sum::<f32>() / (b - a) as f32;
-                        let db = 10. * (power / (2048. * 2048.)).max(1e-10).log10();
-                        *value = ((db + 70.) / 60.).clamp(0., 1.);
-                    }
-                    let _ = spectrum_app.emit("spectrum", bands);
+                    let bands = analyzer.analyze(&samples);
+                    let _ = spectrum_app.emit("spectrum", bands.to_vec());
                 }
             })
             .expect("spectrum thread");
@@ -658,7 +638,7 @@ impl Engine {
             channel: 0,
             visualization: self.visualization.clone(),
             spectrum: self.spectrum.clone(),
-            spectrum_buffer: Vec::with_capacity(2048),
+            spectrum_buffer: Vec::with_capacity(FRAMES * CHANNELS),
             pending_samples: 0,
         };
         self.sink.append(source);
@@ -1003,6 +983,27 @@ impl Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn spectrum_receives_overlapping_stereo_frames_after_dsp() {
+        let (tx, rx) = mpsc::sync_channel(1);
+        let (spectrum, received) = mpsc::sync_channel(2);
+        let mut source = PcmSource {
+            receiver: rx, buffer: VecDeque::new(),
+            frames: Arc::new(AtomicU64::new(0)),
+            buffering: Arc::new(AtomicBool::new(false)),
+            dsp: Arc::new(Mutex::new(DspSettings::default())),
+            filters: [[Biquad::default(); 10]; 2], revision: u64::MAX,
+            preamp: 1., channel: 0,
+            visualization: Arc::new(AtomicBool::new(true)),
+            spectrum, spectrum_buffer: Vec::new(), pending_samples: 0,
+        };
+        let samples: Vec<f32> = (0..FRAMES + HOP)
+            .flat_map(|i| [0., (i as f32 * 0.03).sin() * 0.7]).collect();
+        tx.send(samples.clone()).unwrap();
+        for expected in &samples { assert_eq!(source.next(), Some(*expected)); }
+        assert_eq!(received.try_recv().unwrap(), samples[..FRAMES * CHANNELS]);
+        assert_eq!(received.try_recv().unwrap(), samples[HOP * CHANNELS..]);
+    }
     #[test]
     fn buffering_is_not_treated_as_end_of_track() {
         let (tx, rx) = mpsc::sync_channel(1);

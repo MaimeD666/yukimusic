@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { flip } from "svelte/animate";
+  import { motionDuration, easeOut } from "../lib/motion";
   import Icon from "./Icon.svelte";
   import Artwork from "./Artwork.svelte";
   import { time } from "../lib/format";
@@ -42,10 +44,7 @@
 <section class="queue-panel" aria-label="Очередь воспроизведения">
   <div class="panel-heading">
     <div>
-      <span class="eyebrow"
-        >СЛУШАТЬ ДАЛЬШЕ / {String(state.queue.length).padStart(2, "0")}</span
-      >
-      <h2>Очередь<span class="heading-star">✦</span></h2>
+      <h2>Очередь <small>{state.queue.length}</small></h2>
     </div>
     <button class="icon-button" aria-label="Закрыть очередь" onclick={onclose}
       ><Icon name="close" /></button
@@ -70,6 +69,7 @@
       {@const index = start + offset}
       <div
         class="queue-item"
+        animate:flip={{ duration: motionDuration(220), easing: easeOut }}
         data-queue-key={entry.key}
         class:current={entry.key === state.currentKey}
         class:drop-target={overKey === entry.key}
@@ -109,7 +109,7 @@
               onaction("move", {
                 from: entry.key,
                 to: state.queue[index - 1]?.key,
-              })}><span class="arrow-up">↑</span></button
+              })}><Icon name="up" size={14} /></button
           ><button
             class="icon-button"
             aria-label="Опустить в очереди"
@@ -118,7 +118,7 @@
               onaction("move", {
                 from: entry.key,
                 to: state.queue[index + 1]?.key,
-              })}>↓</button
+              })}><Icon name="down" size={14} /></button
           ><button
             class="icon-button"
             aria-label={`Удалить ${entry.track.title} из очереди`}
@@ -129,7 +129,7 @@
       </div>
     {:else}<div class="empty-small">
         <Icon name="queue" size={32} />
-        <h3>Здесь начинается следующий трек</h3>
+        <h3>Очередь пуста</h3>
         <p>Добавляй музыку кнопкой + или перетаскивай треки.</p>
       </div>{/each}
     <div style:height={`${Math.max(0, state.queue.length - end) * 60}px`}></div>

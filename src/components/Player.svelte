@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { fade } from "svelte/transition";
+  import { reveal } from "../lib/motion";
   import { bassReaction } from "../lib/bassReaction";
-  import { neutralPalette, type PlayerPalette } from "../lib/palette";
+  import {
+    neutralPalette,
+    paletteForTheme,
+    type PlayerPalette,
+  } from "../lib/palette";
   import Artwork from "./Artwork.svelte";
   import Icon from "./Icon.svelte";
   import Visualizer from "./Visualizer.svelte";
@@ -10,6 +14,8 @@
   export let state: Playback;
   export let mode: "dock" | "immersive" | "mini" = "dock";
   export let palette: PlayerPalette = neutralPalette;
+  export let theme: "dark" | "light" = "dark";
+  $: colors = mode === "dock" ? paletteForTheme(palette, theme) : palette;
   export let motion = 180;
   export let visualizer = true;
   export let bass = false;
@@ -21,6 +27,7 @@
   export let onpanel: (panel: string) => void;
   export let onlike: (track: Track) => void;
   export let onvisualizer: () => void;
+  export let onartist: (track: Track) => void;
   $: track = state.queue.find((e) => e.key === state.currentKey)?.track;
   $: duration = track?.duration || 0;
   let seek: number | null = null;
@@ -66,16 +73,17 @@
   class:bass-mode={bass && mode === "immersive"}
   class:immersive={mode === "immersive"}
   class:mini-player={mode === "mini"}
-  style:--accent={palette.accent}
-  style:--player-bg={palette.background}
-  style:--player-surface={palette.surface}
-  style:--player-raised={palette.raised}
-  style:--player-text={palette.foreground}
-  style:--player-muted={palette.muted}
-  style:--player-border={palette.border}
-  style:--player-on-accent={palette.onAccent}
-  style:--player-secondary={palette.secondary}
-  transition:fade={{ duration: motion }}
+  class:idle={!track}
+  style:--accent={colors.accent}
+  style:--player-bg={colors.background}
+  style:--player-surface={colors.surface}
+  style:--player-raised={colors.raised}
+  style:--player-text={colors.foreground}
+  style:--player-muted={colors.muted}
+  style:--player-border={colors.border}
+  style:--player-on-accent={colors.onAccent}
+  style:--player-secondary={colors.secondary}
+  use:reveal={{ key: mode, initial: false, y: 0, duration: 300 }}
   aria-label="Плеер"
 >
   {#if mode === "immersive"}<div
@@ -91,13 +99,14 @@
             class:active={bass}
             aria-label="Бас-режим"
             aria-pressed={bass}
-            title="Визуальный отклик баса · B"
+            data-tooltip="Визуальный отклик баса · B"
             onclick={onbass}
             ><Icon name="bass" size={18} /><span>Бас</span></button
           >{/if}
         <button
           class="icon-button"
           aria-label="Переключить визуалайзер"
+          aria-pressed={visualizer}
           class:active={visualizer}
           onclick={onvisualizer}><Icon name="wave" size={18} /></button
         ><button
@@ -109,29 +118,67 @@
       </div>
     </div>
   {/if}
-  <div class="player-art">
+  <button
+    class="player-art"
+    data-tooltip="Открыть полноэкранный плеер"
+    aria-label="Открыть обложку"
+    disabled={!track}
+    onclick={() => onmode(mode === "immersive" ? "dock" : "immersive")}
+  >
     <Artwork
       src={track?.artwork || null}
       title={track?.title || ""}
       large={mode === "immersive"}
-    />{#if mode === "immersive"}<span class="art-corner top-left"></span><span
-        class="art-corner bottom-right"
-      ></span>{/if}
-  </div>
-  <div class="player-track">
-    <h2 title={track?.title}>{track?.title || "Ничего не играет"}</h2>
+    />
+  </button>
+  <div
+    class="player-track"
+    use:reveal={{ key: track?.id, initial: false, y: 3, duration: 220 }}
+  >
+    <div class="player-track-heading">
+      <h2 data-tooltip={track?.title}>{track?.title || "Ничего не играет"}</h2>
+      <button
+        class="icon-button player-like"
+        class:active={liked}
+        aria-label={liked
+          ? "Убрать текущий трек из любимых"
+          : "Сохранить текущий трек"}
+        aria-pressed={liked}
+        disabled={!track}
+        onclick={() => track && onlike(track)}
+        ><Icon name="heart" size={18} /></button
+      >
+    </div>
     <p>
       {#if state.loading}<span class="loading-status" role="status"
           >Загрузка…</span
-        >{/if}{track?.artist || "Выбери трек"}
+        >{/if}{#if track}<button
+          class="player-artist"
+          onclick={async () => {
+            if (mode !== "dock") await onmode("dock");
+            if (track) onartist(track);
+          }}>{track.artist}</button
+        >{:else}Выбери трек в коллекции или поиске{/if}
     </p>
+    {#if mode === "dock"}<div
+        class="dock-spectrum"
+        class:spectrum-hidden={!visualizer}
+        aria-hidden={!visualizer}
+      >
+        <Visualizer
+          active={state.playing}
+          enabled={visualizer}
+          color="var(--accent)"
+          trackKey={state.currentKey}
+        />
+      </div>{/if}
   </div>
   <div class="player-center">
     <div class="transport">
       <button
         class="icon-button secondary-transport"
         class:active={state.shuffle}
-        title="Перемешать очередь"
+        data-tooltip="Перемешать очередь"
         aria-label="Перемешать очередь"
         aria-pressed={state.shuffle}
         onclick={() => onaction("shuffle")}
@@ -139,7 +186,7 @@
       >
       <button
         class="icon-button"
-        title="Предыдущий трек"
+        data-tooltip="Предыдущий трек"
         aria-label="Предыдущий трек"
         disabled={!track}
         onclick={() => onaction("previous")}
@@ -148,7 +195,7 @@
       <button
         class="play-button"
         class:loading={state.loading}
-        title={state.loading
+        data-tooltip={state.loading
           ? "Загрузка трека · Нажми, чтобы приостановить"
           : "Воспроизведение / пауза · Пробел"}
         aria-label={state.playing || state.loading ? "Пауза" : "Воспроизвести"}
@@ -163,7 +210,7 @@
       >
       <button
         class="icon-button"
-        title="Следующий трек"
+        data-tooltip="Следующий трек"
         aria-label="Следующий трек"
         disabled={!track}
         onclick={() => onaction("next")}><Icon name="next" size={20} /></button
@@ -171,7 +218,7 @@
       <button
         class="icon-button secondary-transport repeat-button"
         class:active={state.repeat !== "off"}
-        title={`Повтор: ${state.repeat === "off" ? "выключен" : state.repeat === "all" ? "очередь" : "трек"}`}
+        data-tooltip={`Повтор: ${state.repeat === "off" ? "выключен" : state.repeat === "all" ? "очередь" : "трек"}`}
         aria-label="Режим повтора"
         onclick={() =>
           onaction(
@@ -205,25 +252,20 @@
       /><span>{time(duration)}</span>
     </div>
   </div>
-  <div class="player-spectrum">
-    <Visualizer
-      active={state.playing}
-      enabled={visualizer}
-      large={mode === "immersive"}
-      color={palette.secondary}
-      trackKey={state.currentKey}
-    />
-  </div>
+  {#if mode === "immersive"}<div
+      class="player-spectrum"
+      class:spectrum-hidden={!visualizer}
+      aria-hidden={!visualizer}
+    >
+      <Visualizer
+        active={state.playing}
+        enabled={visualizer}
+        large={mode === "immersive"}
+        color="var(--player-secondary)"
+        trackKey={state.currentKey}
+      />
+    </div>{/if}
   <div class="player-options">
-    {#if mode === "immersive"}<button
-        class="immersive-like icon-button"
-        class:active={liked}
-        aria-label="В коллекцию"
-        disabled={!track}
-        onclick={() => track && onlike(track)}
-        ><Icon name="heart" size={22} /></button
-      >{/if}
-
     <div class="volume-control">
       <button
         class="icon-button"
@@ -236,7 +278,7 @@
       ><input
         type="range"
         aria-label="Громкость приложения"
-        title={`Громкость ${Math.round(state.volume * 100)}%`}
+        data-tooltip={`Громкость ${Math.round(state.volume * 100)}%`}
         min="0"
         max="1"
         step=".01"
@@ -248,26 +290,28 @@
     <button
       class="icon-button"
       class:active={panel === "eq"}
-      title="Эквалайзер"
+      data-tooltip="Эквалайзер"
       aria-label="Эквалайзер"
       onclick={() => onpanel("eq")}><Icon name="eq" size={19} /></button
     >
     <button
       class="icon-button"
       class:active={panel === "queue"}
-      title="Очередь · Q"
+      data-tooltip="Очередь · Q"
       aria-label="Открыть очередь"
       onclick={() => onpanel("queue")}><Icon name="queue" size={20} /></button
     >
     {#if mode === "dock"}<button
         class="icon-button player-mode"
-        title="Мини-плеер · M"
+        data-tooltip="Мини-плеер · M"
         aria-label="Мини-плеер"
+        disabled={!track}
         onclick={() => onmode("mini")}><Icon name="mini" size={19} /></button
       ><button
         class="icon-button player-mode"
-        title="Полноэкранный плеер · F"
+        data-tooltip="Полноэкранный плеер · F"
         aria-label="Полноэкранный плеер"
+        disabled={!track}
         onclick={() => onmode("immersive")}
         ><Icon name="expand" size={19} /></button
       >{/if}

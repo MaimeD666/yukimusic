@@ -78,6 +78,32 @@ export const neutralPalette: PlayerPalette = {
   onAccent: "#19121d",
   secondary: "#c5b8ce",
 };
+
+/** Keep the artwork hue in the dock while respecting the app's light theme. */
+export function paletteForTheme(palette: PlayerPalette, theme: "dark" | "light"): PlayerPalette {
+  if (theme === "dark") return palette;
+  const base = toLab(rgb(palette.accent));
+  const background = shade(base, 0.94, 0.2);
+  const surface = shade(base, 0.975, 0.12);
+  const raised = shade(base, 0.90, 0.22);
+  const darkText = (light: number, ratio: number, chroma: number) => {
+    let result = shade(base, light, chroma);
+    while (contrast(result, raised) < ratio && light > 0.1) {
+      light -= 0.015;
+      result = shade(base, light, chroma);
+    }
+    return result;
+  };
+  const accent = darkText(0.48, 4.5, 1.2);
+  return {
+    background, surface, raised, accent,
+    foreground: darkText(0.28, 7, 0.35),
+    muted: darkText(0.46, 4.5, 0.4),
+    border: shade(base, 0.72, 0.28),
+    secondary: darkText(0.5, 4.5, 0.95),
+    onAccent: contrast("#ffffff", accent) >= 4.5 ? "#ffffff" : "#151019",
+  };
+}
 /** Weighted perceptual clusters; tiny bright pixels cannot recolor the whole player. */
 export function paletteFromPixels(pixels: ArrayLike<number>): PlayerPalette {
   const bins = new Map<string, { sum: RGB; count: number }>();
